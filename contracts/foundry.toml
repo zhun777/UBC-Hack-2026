@@ -1,0 +1,22 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.24"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "forge-std/=lib/forge-std/src/",
+]
+# The deploy script writes deployments.json
+fs_permissions = [{ access = "read-write", path = "./deployments.json" }]
+
+[invariant]
+runs = 256
+depth = 50
+fail_on_revert = false
+
+[rpc_endpoints]
+arc_testnet = "${ARC_RPC_URL}"
