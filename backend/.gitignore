@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets: copy .env.example to .env instead
+.env
+
+# SQLite database. In WALLET_MODE=test it holds every user's private key: never commit it.
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3

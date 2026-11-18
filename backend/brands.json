@@ -1,0 +1,5 @@
+[
+  {"slug": "brand-a-us", "name": "Brand A", "country": "US", "currency": "USD"},
+  {"slug": "cafe-sg", "name": "Brand A Café", "country": "SG", "currency": "SGD",
+   "branches": [{"slug": "cafe-sg-orchard", "name": "Orchard Road"}]}
+]

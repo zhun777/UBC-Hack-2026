@@ -1,0 +1,6 @@
+fastapi==0.163.2
+uvicorn[standard]==0.54.0
+web3==7.16.0
+python-dotenv==1.2.4
+httpx==0.28.1
+pytest==9.2.0
