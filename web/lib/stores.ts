@@ -10,15 +10,15 @@ export type Store = {
 };
 
 export const STORES: Store[] = [
-  { slug: "brand-a-us", name: "Brand A", location: "Online · United States", kind: "online", href: "/store/brand-a" },
-  { slug: "cafe-sg", name: "Brand A Café", location: "Orchard Road, Singapore", kind: "in-store", href: "/pay" },
+  { slug: "brand-a-us", name: "Treehouse Supply Co.", location: "Online · United States", kind: "online", href: "/store/brand-a" },
+  { slug: "cafe-sg", name: "Treehouse Café", location: "Orchard Road, Singapore", kind: "in-store", href: "/pay" },
 ];
 
 const BRANCHES: Record<string, string> = {
   "cafe-sg-orchard": "Orchard Road, Singapore",
 };
 
-/** "cafe-sg" → "Brand A Café" */
+/** "cafe-sg" → "Treehouse Café" */
 export function storeName(slug: string): string {
   return STORES.find((s) => s.slug === slug)?.name ?? slug;
 }
