@@ -7,7 +7,9 @@ import { ShoppingBag, HandCoins } from "lucide-react";
 import { getMe, getName, getUserId, logout, errorMessage, ApiError, type Me } from "@/lib/api";
 import { formatMoney, formatDate } from "@/lib/format";
 import { storeName, storeLocation } from "@/lib/stores";
+import { CURRENT_PROGRAM } from "@/lib/programs";
 import { Screen, Card, Spinner, ErrorText, VerifyLink } from "@/components/ui";
+import { ProgramSwitcher } from "@/components/program-switcher";
 
 export default function HomePage() {
   const router = useRouter();
@@ -48,9 +50,11 @@ export default function HomePage() {
         <p className="text-stone-500">Welcome back, {name}</p>
       </header>
 
+      <ProgramSwitcher />
+
       {/* Points */}
       <Card className="text-center py-8">
-        <p className="text-sm text-stone-500">Your points</p>
+        <p className="text-sm text-stone-500">Your {CURRENT_PROGRAM.name} points</p>
         <p className="text-6xl font-semibold tracking-tight my-2">{me.points}</p>
         {unlocked ? (
           <p className="text-green-700 font-medium">
@@ -90,7 +94,7 @@ export default function HomePage() {
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-stone-500">Activity</h2>
         {me.history.length === 0 ? (
-          <p className="text-sm text-stone-400">No activity yet. Shop at Brand A to earn your first points.</p>
+          <p className="text-sm text-stone-400">No activity yet. Shop at {storeName("brand-a-us")} to earn your first points.</p>
         ) : (
           <Card className="p-0 divide-y divide-stone-100">
             {me.history.map((item) => (
@@ -100,14 +104,12 @@ export default function HomePage() {
                   <p className="text-xs text-stone-400">
                     {storeLocation(item.brand)} · {formatDate(item.at)}
                   </p>
-                </div>
-                <div className="text-right">
-                  <p className={item.type === "earned" ? "text-green-700 font-medium" : "font-medium"}>
-                    {item.type === "earned" ? "+" : "−"}
-                    {item.points}
-                  </p>
                   <VerifyLink url={item.explorer_url} />
                 </div>
+                <p className={item.type === "earned" ? "text-green-700 font-medium" : "font-medium"}>
+                  {item.type === "earned" ? "+" : "−"}
+                  {item.points}
+                </p>
               </div>
             ))}
           </Card>

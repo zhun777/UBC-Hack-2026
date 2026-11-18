@@ -13,7 +13,7 @@ export default function EnterCodePage() {
     if (!getUserId()) router.replace("/login");
   }, [router]);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     router.push(`/pay/${code}`);
   }
