@@ -143,6 +143,7 @@ export function errorMessage(err: unknown): string {
 // ------------------------------------------------------------- session
 
 const USER_ID_KEY = "user_id";
+const NAME_KEY = "user_name"; // kept in the browser only; the backend has no name field
 
 export function getUserId(): string | null {
   try {
@@ -152,9 +153,24 @@ export function getUserId(): string | null {
   }
 }
 
+export function getName(): string | null {
+  try {
+    return localStorage.getItem(NAME_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveName(name: string) {
+  try {
+    localStorage.setItem(NAME_KEY, name);
+  } catch {}
+}
+
 export function logout() {
   try {
     localStorage.removeItem(USER_ID_KEY);
+    localStorage.removeItem(NAME_KEY);
   } catch {}
 }
 
