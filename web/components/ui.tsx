@@ -74,8 +74,9 @@ export function ErrorText({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-red-600 text-center">{children}</p>;
 }
 
-/** Small "Verify onchain" link to the Arc explorer. */
-export function VerifyLink({ url }: { url: string }) {
+/** Small "Verify onchain" link to the Arc explorer. Hidden when there's no real transaction. */
+export function VerifyLink({ url }: { url: string | null }) {
+  if (!url) return null;
   return (
     <a href={url} target="_blank" rel="noreferrer" className="text-xs text-stone-400 hover:text-green-700">
       Verify onchain ↗

@@ -7,13 +7,13 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export const MOCK = {
-  login: true,
-  me: true,
-  purchase: true,
-  paymentRequest: true,
-  getOrder: true,
-  payOrder: true,
-  payouts: true,
+  login: false,
+  me: false,
+  purchase: false,
+  paymentRequest: false,
+  getOrder: false,
+  payOrder: false,
+  payouts: false,
 };
 
 // ---------------------------------------------------------------- types
@@ -25,6 +25,8 @@ export type ErrorCode =
   | "ORDER_NOT_FOUND"
   | "ORDER_ALREADY_PAID"
   | "CHAIN_ERROR"
+  | "INVALID_REQUEST"
+  | "SERVER_ERROR"
   | "NETWORK_ERROR"; // ours, not the backend's: the request never got an answer
 
 export type LoginResponse = {
@@ -39,7 +41,7 @@ export type HistoryItem = {
   points: number;
   brand: string;
   tx_hash: string;
-  explorer_url: string;
+  explorer_url: string | null; // null when the backend runs without a real chain
   at: string;
 };
 
@@ -61,7 +63,7 @@ export type PurchaseRequest = {
 export type PurchaseResponse = {
   points_earned: number;
   tx_hash: string;
-  explorer_url: string;
+  explorer_url: string | null; // null when the backend runs without a real chain
 };
 
 export type PaymentRequest = {
@@ -96,7 +98,7 @@ export type PayResponse = {
   points_applied: number;
   card_remainder_minor: number;
   tx_hash: string;
-  explorer_url: string;
+  explorer_url: string | null; // null when the backend runs without a real chain
 };
 
 export type Payout = {
@@ -135,8 +137,14 @@ export function errorMessage(err: unknown): string {
       return "This order has already been paid.";
     case "CHAIN_ERROR":
       return "The payment didn't go through. Please try again.";
+    case "INVALID_REQUEST":
+      return "Something about that request wasn't right. Please check and try again.";
+    case "SERVER_ERROR":
+      return "Something went wrong on our side. Please try again in a moment.";
     case "NETWORK_ERROR":
       return "Can't reach the server. Check your connection.";
+    default:
+      return err.message || "Something went wrong. Please try again.";
   }
 }
 
