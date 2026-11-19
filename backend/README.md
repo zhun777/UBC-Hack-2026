@@ -31,11 +31,16 @@ The frontend sees the same API in every mode.
 
 ## Switching to the real contracts
 
-1. Pull once `contracts/deployments.json` and `contracts/abi/` are committed.
-2. Make the network wallet: `.venv/bin/python scripts/new_network_wallet.py`. It prints the
-   address. Fund it from the Circle faucet, and make sure it's the RewardsVault owner.
-3. Set `CHAIN_MODE=arc` in `.env`, restart, and check http://localhost:8000/health.
-4. Run the smoke test. It uses $1.50 of the network wallet's test USDC.
+1. Make the network wallet: `.venv/bin/python scripts/new_network_wallet.py`. It prints the
+   address. Fund it from the Circle faucet.
+2. The network wallet must own the RewardsVault, because only the owner can call `issueReward`.
+   Either deploy the contracts with its key (`DEPLOYER_PRIVATE_KEY` in `contracts/.env`), or
+   have whoever deployed call `transferOwnership(<network wallet address>)` on the vault.
+   The backend logs an error at startup if the owner doesn't match.
+3. Pull once `contracts/deployments.json` is committed (`contracts/abi/` already is).
+4. Set `CHAIN_MODE=arc` in `.env`, restart, and check http://localhost:8000/health.
+5. Run the smoke test. Every reward is paid from the brand's USDC budget in the vault; when a
+   budget runs short, the backend tops it up from the network wallet with `fundBrand`.
 
 ## Files
 

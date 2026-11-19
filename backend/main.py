@@ -212,9 +212,10 @@ def purchase(body: PurchaseBody, x_user_id: str | None = Header(default=None)):
     tx_hash = None
     if points > 0:
         address = wallets.get_or_create_wallet(user["id"])
-        tx_hash = get_chain().issue_reward(address, points)
+        tx_hash = get_chain().issue_reward(address, points, brand["slug"])
         db.add_history(user["id"], "earned", points, brand["slug"], tx_hash)
-        # Mock: the brand "pays in" USD for the reward. The USDC really comes from the network wallet.
+        # Mock: the brand "pays in" USD for the reward. Onchain, the network wallet funds the
+        # brand's USDC budget for it (fundBrand) when the budget runs short.
         db.add_funding(brand["slug"], points, tx_hash)
         log.info("%s funded $%.2f (mock USD in): %d points to %s", brand["name"], points / 100, points, user["email"])
     return {"points_earned": points, "tx_hash": tx_hash, "explorer_url": explorer_url(tx_hash)}
