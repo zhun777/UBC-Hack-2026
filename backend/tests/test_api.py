@@ -96,7 +96,7 @@ def test_full_demo_flow(client):
     shown = client.get(f"/orders/{code}").json()
     assert (shown["brand"], shown["branch"], shown["amount_minor"], shown["currency"]) == \
         ("cafe-sg", "cafe-sg-orchard", 135, "SGD")
-    assert shown["brand_name"] == "Brand A Café"
+    assert shown["brand_name"] == "Treehouse Café"
     assert shown["branch_name"] == "Orchard Road"
     assert shown["status"] == "unpaid"
 

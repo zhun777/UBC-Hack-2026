@@ -13,6 +13,7 @@ import logging
 import secrets
 from dataclasses import dataclass
 
+from eth_abi import decode as decode_abi
 from web3 import Web3
 from web3.logs import DISCARD
 
@@ -63,26 +64,6 @@ def _fn(name, inputs, outputs=(), view=False):
             "stateMutability": "view" if view else "nonpayable"}
 
 
-def _event(name, params):
-    return {"type": "event", "name": name, "anonymous": False,
-            "inputs": [{"name": n, "type": t, "indexed": i} for n, t, i in params]}
-
-
-# Used only until contracts/abi/ has the real ABIs. Copied from the Integration spec.
-FALLBACK_ABIS = {
-    "APPToken": [_fn("balanceOf", [("account", "address")], ["uint256"], view=True)],
-    "RewardsVault": [
-        _fn("issueReward", [("user", "address"), ("dollars", "uint256")]),
-        _fn("spendAtBrand", [("brandId", "bytes32"), ("branchId", "bytes32"),
-                             ("orderId", "bytes32"), ("points", "uint256")]),
-        _fn("orderPaid", [("orderId", "bytes32")], ["bool"], view=True),
-        _event("RewardIssued", [("user", "address", True), ("dollars", "uint256", False),
-                                ("points", "uint256", False)]),
-        _event("Spent", [("user", "address", True), ("brandId", "bytes32", True),
-                         ("branchId", "bytes32", False), ("orderId", "bytes32", True),
-                         ("points", "uint256", False), ("usdcAmount", "uint256", False)]),
-    ],
-}
 ERC20_ABI = [
     _fn("balanceOf", [("account", "address")], ["uint256"], view=True),
     _fn("allowance", [("owner", "address"), ("spender", "address")], ["uint256"], view=True),
@@ -94,13 +75,47 @@ ERC20_ABI = [
 def _abi(name: str) -> list:
     abi = config.load_abi(name)
     if abi is None:
-        log.warning("No %s ABI in contracts/abi/ yet; using the one from the Integration spec", name)
-        return FALLBACK_ABIS[name]
+        raise RuntimeError(f"No {name} ABI in contracts/abi/. Pull the repo, or run contracts/export-abi.sh.")
     return abi
 
 
+# Vault refusals the frontend has an error code for. Any other refusal comes back as a
+# CHAIN_ERROR naming the contract's error, e.g. "InsufficientPoints(500, 120)".
+VAULT_ERRORS = {
+    "OrderAlreadyPaid": ("ORDER_ALREADY_PAID", "This order has already been paid."),
+    "UnknownBrand": ("UNKNOWN_BRAND", "This store isn't registered with the rewards vault."),
+    "BrandInactive": ("UNKNOWN_BRAND", "This store is paused in the rewards vault."),
+}
+
+
+def custom_errors(abi: list) -> dict[str, tuple[str, list[str]]]:
+    """The contract's custom errors by 4-byte selector: {"0x1234abcd": ("OrderAlreadyPaid", [])}."""
+    errors = {}
+    for item in abi:
+        if item.get("type") == "error":
+            types = [i["type"] for i in item.get("inputs", [])]
+            selector = Web3.to_hex(Web3.keccak(text=f"{item['name']}({','.join(types)})")[:4])
+            errors[selector] = (item["name"], types)
+    return errors
+
+
+def vault_refusal(errors: dict, exc: Exception) -> ApiError | None:
+    """If `exc` is the vault reverting with one of its custom errors, that error as an ApiError."""
+    data = getattr(exc, "data", None)  # web3 puts the revert data here, e.g. "0x1234abcd..."
+    if not isinstance(data, str) or len(data) < 10 or data[:10].lower() not in errors:
+        return None
+    name, types = errors[data[:10].lower()]
+    if name in VAULT_ERRORS:
+        return ApiError(*VAULT_ERRORS[name])
+    try:
+        args = decode_abi(types, bytes.fromhex(data[10:])) if types else ()
+    except Exception:
+        args = ()
+    return ApiError("CHAIN_ERROR", f"The rewards vault refused: {name}({', '.join(map(str, args))})")
+
+
 def _chain_call(method):
-    """Turns any failure talking to Arc into a CHAIN_ERROR the frontend understands."""
+    """Turns any failure talking to Arc into an error the frontend understands."""
     @functools.wraps(method)
     def wrapper(*args, **kwargs):
         try:
@@ -108,6 +123,10 @@ def _chain_call(method):
         except ApiError:
             raise
         except Exception as exc:
+            refusal = vault_refusal(getattr(args[0], "errors", {}), exc) if args else None
+            if refusal:
+                log.warning("%s: %s", method.__name__, refusal.message)
+                raise refusal from exc
             log.exception("%s failed", method.__name__)
             reason = getattr(exc, "message", None) or str(exc) or type(exc).__name__
             raise ApiError("CHAIN_ERROR", f"Blockchain call failed: {reason[:300]}") from exc
@@ -140,9 +159,15 @@ class ArcChain:
         self.token = contract(address=Web3.to_checksum_address(d["appToken"]), abi=_abi("APPToken"))
         self.vault = contract(address=Web3.to_checksum_address(d["rewardsVault"]), abi=_abi("RewardsVault"))
         self.usdc = contract(address=Web3.to_checksum_address(d["usdc"]), abi=ERC20_ABI)
+        self.errors = custom_errors(self.vault.abi)
 
     def startup(self) -> None:
-        """One large approval, so issueReward can pull the network wallet's USDC into the vault."""
+        owner = self.vault.functions.owner().call()
+        if owner.lower() != self.network.address.lower():
+            log.error("The RewardsVault owner is %s but NETWORK_PRIVATE_KEY is %s, so earning points will fail. "
+                      "Deploy with the network wallet's key, or transfer the vault's ownership to it.",
+                      owner, self.network.address)
+        # One large approval, so fundBrand can move the network wallet's USDC into brand budgets.
         allowance = self.usdc.functions.allowance(self.network.address, self.vault.address).call()
         if allowance >= 10**11:  # $100,000: plenty for a demo
             return
@@ -154,9 +179,18 @@ class ArcChain:
         return self.token.functions.balanceOf(address).call()
 
     @_chain_call
-    def issue_reward(self, address: str, dollars: int) -> str:
-        """Network wallet calls issueReward: the vault pulls dollars x 1 cent of USDC and mints points."""
-        receipt = self._send_as_network(self.vault.address, self.vault.encode_abi("issueReward", args=[address, dollars]))
+    def issue_reward(self, address: str, points: int, brand: str) -> str:
+        """Network wallet calls issueReward: the vault takes points x $0.01 from the brand's
+        budget and mints the points. If the budget is short, the network wallet tops it up
+        first with fundBrand (in the demo it pays in for the brand)."""
+        brand_id = units.id_bytes(brand)
+        cost = units.cents_to_usdc_units(points)
+        budget = self.vault.functions.getBrand(brand_id).call()[4]  # Brand: settlement, currency, active, exists, budget
+        if budget < cost:
+            log.info("Funding %s's reward budget with $%s", brand, _dollars(cost - budget))
+            self._send_as_network(self.vault.address, self.vault.encode_abi("fundBrand", args=[brand_id, cost - budget]))
+        receipt = self._send_as_network(
+            self.vault.address, self.vault.encode_abi("issueReward", args=[brand_id, address, points]))
         return Web3.to_hex(receipt["transactionHash"])
 
     @_chain_call
@@ -274,12 +308,14 @@ class FakeChain:
             row = conn.execute("SELECT points FROM fake_balances WHERE address = ?", (address.lower(),)).fetchone()
         return row["points"] if row else 0
 
-    def issue_reward(self, address: str, dollars: int) -> str:
+    def issue_reward(self, address: str, points: int, brand: str) -> str:
+        if units.id_hash(brand) not in self._registered_brands:
+            raise ApiError("UNKNOWN_BRAND", "This store isn't registered with the rewards vault.")
         with db.connect() as conn:
             conn.execute(
                 "INSERT INTO fake_balances (address, points) VALUES (?, ?)"
                 " ON CONFLICT(address) DO UPDATE SET points = points + excluded.points",
-                (address.lower(), dollars),
+                (address.lower(), points),
             )
         return _fake_tx_hash()
 

@@ -43,7 +43,7 @@ CIRCLE_API_KEY = _env("CIRCLE_API_KEY")
 CIRCLE_ENTITY_SECRET = _env("CIRCLE_ENTITY_SECRET")
 
 # --- Rules and tuning ----------------------------------------------------------
-MIN_POINTS_TO_SPEND = int(_env("MIN_POINTS_TO_SPEND", "100"))  # must match the vault's threshold
+MIN_POINTS_TO_SPEND = int(_env("MIN_POINTS_TO_SPEND", "100"))  # the vault has no minimum; only we enforce it
 GAS_TOPUP_CENTS = int(_env("GAS_TOPUP_CENTS", "20"))            # test USDC given to each test wallet for fees
 WATCHER_INTERVAL_SECONDS = float(_env("WATCHER_INTERVAL_SECONDS", "2"))
 CORS_ORIGINS = [o.strip() for o in _env("CORS_ORIGINS", "*").split(",") if o.strip()]
