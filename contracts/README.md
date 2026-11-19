@@ -74,7 +74,10 @@ The deployer becomes the owner, so use the same key as the backend's `NETWORK_PR
 - **Fees in USDC:** gas on Arc is paid in USDC, so the network's costs are in dollars and never depend on a volatile token's price.
 - **Verifiable backing:** anyone can call `isFullyBacked()` or compare the vault's USDC balance with `totalLiabilities()` on the explorer.
 
-Deployed addresses (Arc testnet, chain ID 5042002): _fill in after deployment_.
+Deployed addresses (Arc testnet, chain ID 5042002, block 73042029):
 
-- PointsToken: `0x…`
-- RewardsVault: `0x…`
+- PointsToken: [`0xfc7f3FcDc7b09291C7F3df1a6FcCc953f3460DFa`](https://testnet.arcscan.app/address/0xfc7f3FcDc7b09291C7F3df1a6FcCc953f3460DFa)
+- RewardsVault: [`0x14a418200Ead51F6304eC090A5867f7552A76584`](https://testnet.arcscan.app/address/0x14a418200Ead51F6304eC090A5867f7552A76584)
+- Owner (network wallet): `0x8eb58e10cbff9776626d3AE2abD6528C94fF32E3`
+- Treehouse Supply Co. (US, USD) is paid at `0x7e410CCe0E74Adc5985f4D21473a4EaBD2d3859d`
+- Treehouse Café (SG, SGD) is paid at `0xA18F8D7ab8E5d8Dbbb93fB269dB97D3F6A28B804`
