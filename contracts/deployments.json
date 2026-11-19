@@ -1,0 +1,23 @@
+{
+  "appToken": "0xfc7f3FcDc7b09291C7F3df1a6FcCc953f3460DFa",
+  "brands": {
+    "brand-a-us": {
+      "currency": "USD",
+      "id": "0x7df6ace33dbc2efb49db6077732316caf2e1ac87d4c2156694f072be491146e5",
+      "settlement": "0x7e410CCe0E74Adc5985f4D21473a4EaBD2d3859d"
+    },
+    "cafe-sg": {
+      "currency": "SGD",
+      "id": "0x5201e21d519faae81be7783fde2304e898dbb2e67f218026141a55ef2d4bbf19",
+      "settlement": "0xA18F8D7ab8E5d8Dbbb93fB269dB97D3F6A28B804"
+    }
+  },
+  "chainId": 5042002,
+  "deployBlock": 73042029,
+  "explorerUrl": "https://testnet.arcscan.app",
+  "owner": "0x8eb58e10cbff9776626d3AE2abD6528C94fF32E3",
+  "pointValueUsdcUnits": 10000,
+  "rewardsVault": "0x14a418200Ead51F6304eC090A5867f7552A76584",
+  "rpcUrl": "https://rpc.testnet.arc.network",
+  "usdc": "0x3600000000000000000000000000000000000000"
+}
