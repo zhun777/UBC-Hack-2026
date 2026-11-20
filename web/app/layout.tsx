@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "$APP Rewards",
+  title: "Yonder",
   description: "Rewards points that travel across countries.",
 };
 

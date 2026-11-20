@@ -55,7 +55,7 @@ export default function ProfilePage() {
 
       <Card className="p-0 divide-y divide-stone-100 text-sm">
         <div className="flex justify-between px-5 py-4">
-          <span className="text-stone-500">Points</span>
+          <span className="text-stone-500">Points ($YON)</span>
           <span>{me.points}</span>
         </div>
         <div className="flex justify-between px-5 py-4">

@@ -1,4 +1,4 @@
-// Rewards programs on the $APP network. Each program has its own points that
+// Rewards programs on the Yonder network. Each program has its own points ($YON) that
 // work in every country it operates in. Only Treehouse is live in the demo;
 // the rest are frontend-only placeholders for the "what's next" story.
 
