@@ -46,7 +46,7 @@ export default function HomePage() {
   return (
     <Screen nav>
       <header>
-        <p className="font-semibold">$APP Rewards</p>
+        <p className="font-semibold">Yonder</p>
         <p className="text-stone-500">Welcome back, {name}</p>
       </header>
 
